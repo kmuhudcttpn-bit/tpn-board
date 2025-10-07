@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TPN公布欄</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Microsoft JhengHei',Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh}
+    .container{max-width:1200px;margin:0 auto;padding:20px}
+    .header{background:rgba(255,255,255,.95);padding:20px;border-radius:15px;box-shadow:0 8px 32px rgba(0,0,0,.1);text-align:center;margin-bottom:20px}
+    .header h1{color:#2c3e50;font-size:2.5em;margin-bottom:10px}
+    .tabs{display:flex;background:rgba(255,255,255,.9);border-radius:15px;padding:5px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+    .tab{flex:1;padding:15px;text-align:center;cursor:pointer;border-radius:10px;transition:all .3s ease;font-weight:bold;color:#666}
+    .tab.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;transform:translateY(-2px);box-shadow:0 4px 15px rgba(102,126,234,.4)}
+    .tab-content{display:none;background:rgba(255,255,255,.95);border-radius:15px;padding:25px;box-shadow:0 8px 32px rgba(0,0,0,.1)}
+    .tab-content.active{display:block}
+    .section{margin-bottom:30px}
+    .section h2{color:#2c3e50;border-bottom:3px solid #667eea;padding-bottom:10px;margin-bottom:20px;font-size:1.5em}
+    .bulletin-board{display:grid;gap:20px}
+    .bulletin-section{background:#f8f9fa;border-radius:10px;padding:20px;border-left:5px solid #667eea}
+    .bulletin-section h3{color:#2c3e50;margin-bottom:15px;display:flex;align-items:center;gap:10px}
+    .bulletin-item{background:#fff;padding:15px;border-radius:8px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);display:flex;justify-content:space-between;align-items:flex-start}
+    .bulletin-content{flex:1}
+    .bulletin-author{font-weight:bold;color:#667eea;margin-bottom:5px}
+    .bulletin-text{color:#555;line-height:1.6}
+    .delete-btn{background:#e74c3c;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:12px;transition:background .3s}
+    .delete-btn:hover{background:#c0392b}
+    .calendar{background:#f8f9fa;border-radius:10px;padding:20px;margin-top:20px}
+    .calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+    .calendar-nav{background:#667eea;color:#fff;border:none;padding:10px 15px;border-radius:5px;cursor:pointer;transition:background .3s}
+    .calendar-nav:hover{background:#5a6fd8}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+    .calendar-day{padding:15px 10px;text-align:center;background:#fff;border-radius:5px;cursor:pointer;transition:all .3s;min-height:60px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+    .calendar-day:hover{background:#667eea;color:#fff;transform:translateY(-2px)}
+    .calendar-day.other-month{opacity:.3}
+    .calendar-day.today{background:#667eea;color:#fff;font-weight:bold}
+    .input-form{background:#f8f9fa;padding:25px;border-radius:10px;margin-bottom:20px}
+    .form-group{margin-bottom:20px}
+    .form-group label{display:block;margin-bottom:8px;font-weight:bold;color:#2c3e50}
+    .form-group input,.form-group textarea,.form-group select{width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:16px;transition:border-color .3s}
+    .form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:#667eea}
+    .form-group textarea{min-height:100px;resize:vertical}
+    .checkbox-group{display:flex;align-items:center;gap:10px;margin-top:10px}
+    .submit-btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:15px 30px;border-radius:8px;cursor:pointer;font-size:16px;font-weight:bold;transition:transform .3s}
+    .submit-btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(102,126,234,.4)}
+    .monster-item{background:#fff;padding:20px;border-radius:10px;margin-bottom:15px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+    .monster-creator{font-weight:bold;color:#667eea;margin-bottom:10px;font-size:1.1em}
+    .monster-story{margin-bottom:15px;line-height:1.6;color:#555}
+    .monster-tips{background:#e8f4fd;padding:15px;border-radius:8px;border-left:4px solid #667eea}
+    .day-name{padding:10px;text-align:center;font-weight:bold;color:#667eea;background:#e8f4fd;border-radius:5px}
+    .no-data{text-align:center;color:#888;padding:40px;font-style:italic}
+    .calendar-day.today:hover{background:#667eea;color:#fff}
+    .task-tag{font-size:10px;background:#667eea;color:#fff;padding:2px 4px;border-radius:3px;margin-top:2px;display:flex;justify-content:space-between;align-items:center;gap:2px}
+    .task-tag-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .task-delete-btn{background:#e74c3c;border:none;color:#fff;padding:1px 4px;border-radius:2px;cursor:pointer;font-size:9px;line-height:1}
+    .task-delete-btn:hover{background:#c0392b}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏥 TPN公布欄</h1>
+      <p>團隊協作資訊中心</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(0)">📋 公布欄</div>
+      <div class="tab" onclick="switchTab(1)">📅 行事曆</div>
+      <div class="tab" onclick="switchTab(2)">✍️ 我要交班</div>
+      <div class="tab" onclick="switchTab(3)">⚔️ 我要打怪</div>
+    </div>
+
+    <!-- 公布欄 -->
+    <div class="tab-content active" id="tab-0">
+      <div class="section">
+        <h2>📋 公布欄</h2>
+        <div class="bulletin-board" id="bulletinBoard">
+          <div class="bulletin-section">
+            <h3>🔥 當日訊息</h3>
+            <div id="todayMessages" class="no-data">暫無當日訊息</div>
+          </div>
+          <div class="bulletin-section">
+            <h3>📅 未來訊息</h3>
+            <div id="futureMessages" class="no-data">暫無未來訊息</div>
+          </div>
+          <div class="bulletin-section">
+            <h3>📌 常駐訊息</h3>
+            <div id="permanentMessages" class="no-data">暫無常駐訊息</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 行事曆 -->
+    <div class="tab-content" id="tab-1">
+      <div class="section">
+        <h2>📅 行事曆</h2>
+        <div class="calendar">
+          <div class="calendar-header">
+            <button class="calendar-nav" onclick="changeMonth(-1)">◀ 上個月</button>
+            <h3 id="currentMonth"></h3>
+            <button class="calendar-nav" onclick="changeMonth(1)">下個月 ▶</button>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 我要交班 -->
+    <div class="tab-content" id="tab-2">
+      <div class="section">
+        <h2>📝 新增公告訊息</h2>
+        <div class="input-form">
+          <div class="form-group">
+            <label>公告者</label>
+            <input type="text" id="announcer" placeholder="請輸入公告者姓名"/>
+          </div>
+          <div class="form-group">
+            <label>公告內容</label>
+            <textarea id="announcement" placeholder="請輸入公告內容"></textarea>
+          </div>
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="isPermanent" onchange="toggleDateInput()"/>
+              <label for="isPermanent">設為常駐公告</label>
+            </div>
+          </div>
+          <div class="form-group" id="dateGroup">
+            <label>訊息日期</label>
+            <input type="date" id="messageDate"/>
+          </div>
+          <button class="submit-btn" onclick="addAnnouncement()">發布公告</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>📅 新增行事曆任務</h2>
+        <div class="input-form">
+          <div class="form-group">
+            <label>任務名稱</label>
+            <input type="text" id="taskName" placeholder="請輸入任務名稱"/>
+          </div>
+          <div class="form-group">
+            <label>開始日期</label>
+            <input type="date" id="startDate"/>
+          </div>
+          <div class="form-group">
+            <label>結束日期（選填）</label>
+            <input type="date" id="endDate"/>
+          </div>
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="isRecurring" onchange="toggleRecurringOptions()"/>
+              <label for="isRecurring">重複任務</label>
+            </div>
+          </div>
+          <div class="form-group" id="recurringGroup" style="display:none;">
+            <label>重複類型</label>
+            <select id="recurringType">
+              <option value="">請選擇重複類型</option>
+              <option value="monthly-date">每月固定日期</option>
+              <option value="monthly-weekday">每月固定第幾周的星期幾</option>
+              <option value="monthly-workday">每月第一個工作天</option>
+              <option value="weekly">每週固定星期幾</option>
+            </select>
+          </div>
+          <button class="submit-btn" onclick="addTask()">新增任務</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 我要打怪 -->
+    <div class="tab-content" id="tab-3">
+      <div class="section">
+        <h2>⚔️ 打怪區（經驗分享）</h2>
+        <div id="monsterDisplay">
+          <div class="no-data">暫無打怪經驗，快來分享你的戰鬥故事吧！</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>👹 妖魔區（新增經驗）</h2>
+        <div class="input-form">
+          <div class="form-group">
+            <label>創建者</label>
+            <input type="text" id="creator" placeholder="請輸入創建者姓名"/>
+          </div>
+          <div class="form-group">
+            <label>血淚史（問題描述）</label>
+            <textarea id="problem" placeholder="描述遇到的問題或挑戰"></textarea>
+          </div>
+          <div class="form-group">
+            <label>錦囊（解決方案）</label>
+            <textarea id="solution" placeholder="分享解決方案或經驗心得"></textarea>
+          </div>
+          <button class="submit-btn" onclick="addMonster()">分享經驗</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase：初始化（module） -->
+  <script type="module">
+    import { initializeApp as firebaseInitializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+    import { getDatabase, ref, push, set, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMov5jMBWqSaSeRehdwyx2doNLhuptEv0",
+      authDomain: "tpn-bulletin-board.firebaseapp.com",
+      databaseURL: "https://tpn-bulletin-board-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "tpn-bulletin-board",
+      storageBucket: "tpn-bulletin-board.appspot.com",
+      messagingSenderId: "54003847727",
+      appId: "1:54003847727:web:e272a9a607f0ddc867acda",
+      measurementId: "G-485KMHSZ4W"
+    };
+
+    window.announcements = [];
+    window.tasks = [];
+    window.monsters = [];
+    window.currentDate = new Date();
+    window.calendarDate = new Date();
+
+    let listenersInstalled = false;
+
+    async function bootApp() {
+      console.log('📱 頁面載入完成，開始診斷...');
+      try {
+        console.log('🚀 初始化 Firebase...');
+        const app = firebaseInitializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.firebaseApp = app;
+        window.firebaseDb = db;
+        window.firebaseRefs = { ref, push, set, onValue, remove };
+
+        await testFirebaseConnection(db);
+        setupFirebaseListeners();
+        showConnectionStatus('已連線到雲端資料庫 🌐', 'success');
+      } catch (err) {
+        console.error('🚫 Firebase 初始化失敗：', err);
+        showConnectionStatus('無法連接雲端，使用本地模式 📡', 'warning');
+        loadLocalData();
+      }
+      updateAllDisplays();
+    }
+
+    function testFirebaseConnection(db) {
+      return new Promise((resolve, reject) => {
+        const testRef = ref(db, '.info/connected');
+        const timeout = setTimeout(() => { cleanup(); reject(new Error('Firebase 連線逾時')); }, 12000);
+
+        const handleSnapshot = (snap) => {
+          if (snap.val() === true) {
+            clearTimeout(timeout); cleanup();
+            console.log('✅ Firebase 連線成功'); resolve(true);
+          }
+        };
+        const handleError = (e) => { clearTimeout(timeout); cleanup(); reject(e); };
+
+        onValue(testRef, handleSnapshot, handleError);
+        function cleanup(){ try {/* 可用 off() 解除監聽 */} catch {} }
+      });
+    }
+
+    function setupFirebaseListeners() {
+      if (listenersInstalled) return;
+      listenersInstalled = true;
+
+      const { ref, onValue } = window.firebaseRefs;
+      const db = window.firebaseDb;
+
+      onValue(ref(db, 'announcements'), (snap) => {
+        const data = snap.val();
+        window.announcements = data ? Object.entries(data).map(([id, v]) => ({ id, ...v })) : [];
+        updateBulletinBoard();
+      });
+
+      onValue(ref(db, 'tasks'), (snap) => {
+        const data = snap.val();
+        window.tasks = data ? Object.entries(data).map(([id, v]) => ({ id, ...v })) : [];
+        updateCalendar();
+      });
+
+      onValue(ref(db, 'monsters'), (snap) => {
+        const data = snap.val();
+        window.monsters = data ? Object.entries(data).map(([id, v]) => ({ id, ...v })) : [];
+        updateMonsterDisplay();
+      });
+
+      console.log('🎧 Firebase 監聽器已就緒');
+    }
+
+    function showConnectionStatus(message, type) {
+      const statusDiv = document.createElement('div');
+      statusDiv.style.cssText = `
+        position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 25px;
+        color: #fff; font-weight: bold; z-index: 1000; animation: slideIn .5s ease-out;
+        ${type==='success'?'background:linear-gradient(135deg,#4CAF50,#45a049);':''}
+        ${type==='warning'?'background:linear-gradient(135deg,#ff9800,#e68900);':''}
+        ${type==='info'?'background:linear-gradient(135deg,#2196F3,#1976D2);':''}
+      `;
+      statusDiv.textContent = message;
+      const style = document.createElement('style');
+      style.textContent = `@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`;
+      document.head.appendChild(style);
+      document.body.appendChild(statusDiv);
+      setTimeout(()=>{ statusDiv.style.animation='slideIn .5s ease-out reverse'; setTimeout(()=>statusDiv.remove(),500); },5000);
+    }
+
+    function loadLocalData() {
+      try{
+        const saved = localStorage.getItem('tpnBulletinData');
+        if(saved){
+          const d = JSON.parse(saved);
+          window.announcements = d.announcements || [];
+          window.tasks = d.tasks || [];
+          window.monsters = d.monsters || [];
+        }else{
+          loadDemoData();
+        }
+      }catch{ loadDemoData(); }
+    }
+
+    function loadDemoData(){
+      window.announcements = [
+        { id:'demo1', announcer:'護理長', content:'請注意今日有新的TPN配方調整', date:new Date().toISOString().split('T')[0], isPermanent:false, timestamp:new Date().toISOString() },
+        { id:'demo2', announcer:'藥師', content:'記得檢查TPN袋的保存期限', date:null, isPermanent:true, timestamp:new Date().toISOString() }
+      ];
+    }
+
+    window.showConnectionStatus = showConnectionStatus;
+    window.loadLocalData = loadLocalData;
+
+    document.addEventListener('DOMContentLoaded', bootApp);
+  </script>
+
+  <!-- 互動/UI（非 module） -->
+  <script>
+    function switchTab(index){
+      document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===index));
+      document.querySelectorAll('.tab-content').forEach((c,i)=>c.classList.toggle('active',i===index));
+    }
+    function toggleDateInput(){
+      const isPermanent=document.getElementById('isPermanent').checked;
+      document.getElementById('dateGroup').style.display=isPermanent?'none':'block';
+    }
+    function toggleRecurringOptions(){
+      const isRecurring=document.getElementById('isRecurring').checked;
+      document.getElementById('recurringGroup').style.display=isRecurring?'block':'none';
+    }
+
+    function addAnnouncement(){
+      const announcer=document.getElementById('announcer').value.trim();
+      const announcement=document.getElementById('announcement').value.trim();
+      const isPermanent=document.getElementById('isPermanent').checked;
+      const messageDate=document.getElementById('messageDate').value;
+      if(!announcer||!announcement){ alert('請填寫公告者和公告內容'); return; }
+      if(!isPermanent && !messageDate){ alert('請選擇訊息日期或設為常駐公告'); return; }
+      const newAnnouncement={ announcer, content:announcement, date:isPermanent?null:messageDate, isPermanent, timestamp:new Date().toISOString() };
+      if(window.firebaseDb){
+        const { ref, push } = window.firebaseRefs;
+        push(ref(window.firebaseDb,'announcements'), newAnnouncement)
+          .then(()=>{ clearAnnouncementForm(); alert('公告發布成功！'); })
+          .catch((e)=>{ console.error('發布公告失敗:',e); alert('發布失敗，請檢查網路連線'); });
+      }else{
+        newAnnouncement.id=Date.now().toString();
+        window.announcements.push(newAnnouncement);
+        saveLocalData(); updateBulletinBoard(); clearAnnouncementForm();
+        alert('公告發布成功！（本地儲存）');
+      }
+    }
+    function clearAnnouncementForm(){
+      document.getElementById('announcer').value='';
+      document.getElementById('announcement').value='';
+      document.getElementById('isPermanent').checked=false;
+      document.getElementById('messageDate').value='';
+      toggleDateInput();
+    }
+
+    function addTask(){
+      const taskName=document.getElementById('taskName').value.trim();
+      const startDate=document.getElementById('startDate').value;
+      const endDate=document.getElementById('endDate').value;
+      const isRecurring=document.getElementById('isRecurring').checked;
+      const recurringType=document.getElementById('recurringType').value;
+      if(!taskName||!startDate){ alert('請填寫任務名稱和開始日期'); return; }
+      if(isRecurring && !recurringType){ alert('請選擇重複類型'); return; }
+      const newTask={ name:taskName, startDate, endDate:endDate||startDate, isRecurring, recurringType, timestamp:new Date().toISOString() };
+      if(window.firebaseDb){
+        const { ref, push } = window.firebaseRefs;
+        push(ref(window.firebaseDb,'tasks'), newTask)
+          .then(()=>{ clearTaskForm(); alert('任務新增成功！'); })
+          .catch((e)=>{ console.error('新增任務失敗:',e); alert('新增失敗，請檢查網路連線'); });
+      }else{
+        newTask.id=Date.now().toString();
+        window.tasks.push(newTask);
+        saveLocalData(); updateCalendar(); clearTaskForm();
+        alert('任務新增成功！（本地儲存）');
+      }
+    }
+    function clearTaskForm(){
+      document.getElementById('taskName').value='';
+      document.getElementById('startDate').value='';
+      document.getElementById('endDate').value='';
+      document.getElementById('isRecurring').checked=false;
+      document.getElementById('recurringType').value='';
+      toggleRecurringOptions();
+    }
+
+    function addMonster(){
+      const creator=document.getElementById('creator').value.trim();
+      const problem=document.getElementById('problem').value.trim();
+      const solution=document.getElementById('solution').value.trim();
+      if(!creator||!problem||!solution){ alert('請填寫所有欄位'); return; }
+      const newMonster={ creator, problem, solution, timestamp:new Date().toISOString() };
+      if(window.firebaseDb){
+        const { ref, push } = window.firebaseRefs;
+        push(ref(window.firebaseDb,'monsters'), newMonster)
+          .then(()=>{ clearMonsterForm(); alert('打怪經驗分享成功！'); })
+          .catch((e)=>{ console.error('分享經驗失敗:',e); alert('分享失敗，請檢查網路連線'); });
+      }else{
+        newMonster.id=Date.now().toString();
+        window.monsters.push(newMonster);
+        saveLocalData(); updateMonsterDisplay(); clearMonsterForm();
+        alert('打怪經驗分享成功！（本地儲存）');
+      }
+    }
+    function clearMonsterForm(){
+      document.getElementById('creator').value='';
+      document.getElementById('problem').value='';
+      document.getElementById('solution').value='';
+    }
+
+    function updateBulletinBoard(){
+      const today=new Date().toISOString().split('T')[0];
+      const todayMessages=document.getElementById('todayMessages');
+      const futureMessages=document.getElementById('futureMessages');
+      const permanentMessages=document.getElementById('permanentMessages');
+
+      const todayAnnouncements = window.announcements.filter(a=>a.date===today);
+      const futureAnnouncements = window.announcements.filter(a=>a.date && a.date>today);
+      const permanentAnnouncements = window.announcements.filter(a=>a.isPermanent);
+
+      todayMessages.innerHTML = todayAnnouncements.length===0
+        ? '<div class="no-data">暫無當日訊息</div>'
+        : todayAnnouncements.map(a=>`
+          <div class="bulletin-item">
+            <div class="bulletin-content">
+              <div class="bulletin-author">${a.announcer}</div>
+              <div class="bulletin-text">${a.content}</div>
+            </div>
+            <button class="delete-btn" onclick="deleteAnnouncement('${a.id}')">刪除</button>
+          </div>`).join('');
+
+      futureMessages.innerHTML = futureAnnouncements.length===0
+        ? '<div class="no-data">暫無未來訊息</div>'
+        : futureAnnouncements.map(a=>`
+          <div class="bulletin-item">
+            <div class="bulletin-content">
+              <div class="bulletin-author">${a.announcer}</div>
+              <div class="bulletin-text">${a.content}</div>
+            </div>
+            <button class="delete-btn" onclick="deleteAnnouncement('${a.id}')">刪除</button>
+          </div>`).join('');
+
+      permanentMessages.innerHTML = permanentAnnouncements.length===0
+        ? '<div class="no-data">暫無常駐訊息</div>'
+        : permanentAnnouncements.map(a=>`
+          <div class="bulletin-item">
+            <div class="bulletin-content">
+              <div class="bulletin-author">${a.announcer}</div>
+              <div class="bulletin-text">${a.content}</div>
+            </div>
+            <button class="delete-btn" onclick="deleteAnnouncement('${a.id}')">刪除</button>
+          </div>`).join('');
+    }
+
+    function deleteAnnouncement(id){
+      if(!confirm('確定要刪除此公告嗎？')) return;
+      if(window.firebaseDb){
+        const { ref, remove } = window.firebaseRefs;
+        remove(ref(window.firebaseDb,`announcements/${id}`))
+          .then(()=>console.log('公告刪除成功'))
+          .catch((e)=>{ console.error('刪除公告失敗:',e); alert('刪除失敗，請檢查網路連線'); });
+      }else{
+        window.announcements = window.announcements.filter(a=>a.id!==id);
+        saveLocalData(); updateBulletinBoard();
+      }
+    }
+
+    function updateCalendar(){
+      const year=window.calendarDate.getFullYear();
+      const month=window.calendarDate.getMonth();
+      document.getElementById('currentMonth').textContent = `${year}年${month+1}月`;
+
+      const firstDay=new Date(year,month,1);
+      const startDate=new Date(firstDay);
+      startDate.setDate(startDate.getDate()-firstDay.getDay());
+
+      const calendarGrid=document.getElementById('calendarGrid');
+      calendarGrid.innerHTML='';
+
+      ['日','一','二','三','四','五','六'].forEach(day=>{
+        const el=document.createElement('div'); el.className='day-name'; el.textContent=day; calendarGrid.appendChild(el);
+      });
+
+      for(let i=0;i<42;i++){
+        const date=new Date(startDate); date.setDate(startDate.getDate()+i);
+        const dayEl=document.createElement('div'); dayEl.className='calendar-day';
+        if(date.getMonth()!==month) dayEl.classList.add('other-month');
+        if(date.toDateString()===new Date().toDateString()) dayEl.classList.add('today');
+        dayEl.innerHTML=`<div>${date.getDate()}</div>`;
+
+        const dateStr=formatDateStr(date);
+        const dayTasks=window.tasks.filter(t=>{
+          if(!t.isRecurring){
+            return dateStr>=t.startDate && dateStr<=t.endDate;
+          }
+          
+          const taskStart = new Date(t.startDate + 'T00:00:00');
+          if(date < taskStart) return false;
+          
+          switch(t.recurringType){
+            case 'monthly-date':
+              return date.getDate() === taskStart.getDate();
+            
+            case 'monthly-weekday':
+              const startWeekOfMonth = Math.ceil(taskStart.getDate() / 7);
+              const currentWeekOfMonth = Math.ceil(date.getDate() / 7);
+              return date.getDay() === taskStart.getDay() && startWeekOfMonth === currentWeekOfMonth;
+            
+            case 'monthly-workday':
+              if(date.getDay() === 0 || date.getDay() === 6) return false;
+              const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+              let firstWorkday = new Date(firstDayOfMonth);
+              while(firstWorkday.getDay() === 0 || firstWorkday.getDay() === 6){
+                firstWorkday.setDate(firstWorkday.getDate() + 1);
+              }
+              return date.getDate() === firstWorkday.getDate();
+            
+            case 'weekly':
+              return date.getDay() === taskStart.getDay();
+            
+            default:
+              return false;
+          }
+        });
+        
+        dayTasks.forEach(t=>{
+          const tEl=document.createElement('div');
+          tEl.className='task-tag';
+          
+          const nameEl=document.createElement('div');
+          nameEl.className='task-tag-name';
+          nameEl.textContent=t.name;
+          
+          const delBtn=document.createElement('button');
+          delBtn.className='task-delete-btn';
+          delBtn.textContent='×';
+          delBtn.onclick=(e)=>{ e.stopPropagation(); deleteTask(t.id); };
+          
+          tEl.appendChild(nameEl);
+          tEl.appendChild(delBtn);
+          dayEl.appendChild(tEl);
+        });
+
+        calendarGrid.appendChild(dayEl);
+      }
+    }
+
+    function formatDateStr(date){
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function changeMonth(delta){
+      window.calendarDate.setMonth(window.calendarDate.getMonth()+delta);
+      updateCalendar();
+    }
+
+    function updateMonsterDisplay(){
+      const container=document.getElementById('monsterDisplay');
+      if(window.monsters.length===0){
+        container.innerHTML='<div class="no-data">暫無打怪經驗，快來分享你的戰鬥故事吧！</div>';
+      }else{
+        container.innerHTML = window.monsters.map(m=>`
+          <div class="monster-item">
+            <div class="monster-creator">🗡️ ${m.creator}</div>
+            <div class="monster-story"><h4>血淚史：</h4><p>${m.problem}</p></div>
+            <div class="monster-tips"><h4>💡 錦囊妙計：</h4><p>${m.solution}</p></div>
+            <button class="delete-btn" onclick="deleteMonster('${m.id}')" style="margin-top:10px;">刪除經驗</button>
+          </div>`).join('');
+      }
+    }
+
+    function deleteMonster(id){
+      if(!confirm('確定要刪除此打怪經驗嗎？')) return;
+      if(window.firebaseDb){
+        const { ref, remove } = window.firebaseRefs;
+        remove(ref(window.firebaseDb,`monsters/${id}`))
+          .then(()=>console.log('打怪經驗刪除成功'))
+          .catch((e)=>{ console.error('刪除打怪經驗失敗:',e); alert('刪除失敗，請檢查網路連線'); });
+      }else{
+        window.monsters = window.monsters.filter(m=>m.id!==id);
+        saveLocalData(); updateMonsterDisplay();
+      }
+    }
+
+    function deleteTask(id){
+      if(!confirm('確定要刪除此任務嗎？')) return;
+      if(window.firebaseDb){
+        const { ref, remove } = window.firebaseRefs;
+        remove(ref(window.firebaseDb,`tasks/${id}`))
+          .then(()=>console.log('任務刪除成功'))
+          .catch((e)=>{ console.error('刪除任務失敗:',e); alert('刪除失敗，請檢查網路連線'); });
+      }else{
+        window.tasks = window.tasks.filter(t=>t.id!==id);
+        saveLocalData(); updateCalendar();
+      }
+    }
+
+    function formatDate(s){
+      if(!s) return '';
+      const d=new Date(s);
+      return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    }
+
+    function saveLocalData(){
+      const data={ announcements:window.announcements, tasks:window.tasks, monsters:window.monsters };
+      localStorage.setItem('tpnBulletinData', JSON.stringify(data));
+      console.log('資料已儲存至本地');
+    }
+
+    function loadLocalData(){
+      try{
+        const saved=localStorage.getItem('tpnBulletinData');
+        if(saved){
+          const d=JSON.parse(saved);
+          window.announcements=d.announcements||[];
+          window.tasks=d.tasks||[];
+          window.monsters=d.monsters||[];
+          console.log('從本地載入資料');
+        }else{
+          loadDemoData();
+        }
+      }catch(e){ console.error('載入本地資料失敗:',e); loadDemoData(); }
+    }
+
+    function loadDemoData(){
+      window.announcements=[
+        { id:'1', announcer:'護理長', content:'請注意今日有新的TPN配方調整', date:new Date().toISOString().split('T')[0], isPermanent:false, timestamp:new Date().toISOString() },
+        { id:'2', announcer:'藥師', content:'記得檢查TPN袋的保存期限', date:null, isPermanent:true, timestamp:new Date().toISOString() }
+      ];
+    }
+
+    window.switchTab = switchTab;
+    window.toggleDateInput = toggleDateInput;
+    window.toggleRecurringOptions = toggleRecurringOptions;
+    window.addAnnouncement = addAnnouncement;
+    window.addTask = addTask;
+    window.addMonster = addMonster;
+    window.deleteAnnouncement = deleteAnnouncement;
+    window.deleteTask = deleteTask;
+    window.deleteMonster = deleteMonster;
+    window.updateAllDisplays = function(){ updateCalendar(); updateBulletinBoard(); updateMonsterDisplay(); };
+    window.updateBulletinBoard = updateBulletinBoard;
+    window.updateCalendar = updateCalendar;
+    window.updateMonsterDisplay = updateMonsterDisplay;
+    window.changeMonth = changeMonth;
+
+    window.addEventListener('online', ()=> showConnectionStatus && showConnectionStatus('網路已恢復 📶','success'));
+    window.addEventListener('offline',()=> showConnectionStatus && showConnectionStatus('網路斷線，使用本地模式 📵','warning'));
+  </script>
+</body>
+</html>
