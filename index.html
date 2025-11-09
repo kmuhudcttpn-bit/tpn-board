@@ -22,8 +22,10 @@
     .bulletin-section h3{color:#2c3e50;margin-bottom:15px;display:flex;align-items:center;gap:10px}
     .bulletin-item{background:#fff;padding:15px;border-radius:8px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);display:flex;justify-content:space-between;align-items:flex-start}
     .bulletin-content{flex:1}
-    .bulletin-author{font-weight:bold;color:#667eea;margin-bottom:5px}
+    .bulletin-author{font-weight:bold;color:#667eea;margin-bottom:5px;font-style:normal}
     .bulletin-text{color:#555;line-height:1.6}
+    .bulletin-single-line{color:#555;line-height:1.6;font-style:normal}
+    .bulletin-single-line .author{font-weight:bold;color:#667eea;font-style:normal}
     .delete-btn{background:#e74c3c;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:12px;transition:background .3s}
     .delete-btn:hover{background:#c0392b}
     .calendar{background:#f8f9fa;border-radius:10px;padding:20px;margin-top:20px}
@@ -470,8 +472,7 @@
         : permanentAnnouncements.map(a=>`
           <div class="bulletin-item">
             <div class="bulletin-content">
-              <div class="bulletin-author">${a.announcer}</div>
-              <div class="bulletin-text">${a.content}</div>
+              <div class="bulletin-single-line"><span class="author">${a.announcer}</span> ${a.content}</div>
             </div>
             <button class="delete-btn" onclick="deleteAnnouncement('${a.id}')">刪除</button>
           </div>`).join('');
